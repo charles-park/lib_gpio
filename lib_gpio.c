@@ -55,21 +55,46 @@ int gpio_export (int gpio)
 //------------------------------------------------------------------------------
 int gpio_direction (int gpio, int status)
 {
-    char fname[256];
+    char fname [256], gpio_dir [4];
     FILE *fp;
 
-    memset (fname, 0x00, sizeof(fname));
+    memset  (gpio_dir, 0, sizeof(gpio_dir));
+    memset  (fname, 0x00, sizeof(fname));
     sprintf (fname, "%s/gpio%d/direction", GPIO_CONTROL_PATH, gpio);
     if ((fp = fopen (fname, "w")) != NULL) {
-        char gpio_status[4];
-        memset (gpio_status, 0x00, sizeof(gpio_status));
-        sprintf(gpio_status, "%s", status ? "out" : "in");
-        fwrite (gpio_status, strlen(gpio_status), 1, fp);
+        sprintf(gpio_dir, "%s", status ? "out" : "in");
+        fwrite (gpio_dir, strlen(gpio_dir), 1, fp);
         fclose (fp);
         return 1;
     }
-    printf ("%s error : gpio = %d\n", __func__, gpio);
+    printf ("%s : error!(gpio = %d)\n", __func__, gpio);
     return 0;
+}
+
+//------------------------------------------------------------------------------
+int gpio_set_direction (int gpio, int status)
+{
+    return gpio_direction (gpio, status);
+}
+
+//------------------------------------------------------------------------------
+int gpio_get_direction (int gpio)
+{
+    char fname [256], gpio_dir [4];
+    FILE *fp;
+
+    memset  (gpio_dir, 0, sizeof(gpio_dir));
+    memset  (fname, 0x00, sizeof(fname));
+    sprintf (fname, "%s/gpio%d/direction", GPIO_CONTROL_PATH, gpio);
+    if ((fp = fopen (fname, "r")) != NULL) {
+        fread (gpio_dir, sizeof(gpio_dir), 1, fp);
+        fclose (fp);
+    } else {
+        printf ("%s : error!(gpio = %d)\n", __func__, gpio);
+        return 0;
+    }
+
+    return (strncmp (gpio_dir, "out", sizeof("out")) == 0) ? 1 : 0;
 }
 
 //------------------------------------------------------------------------------
